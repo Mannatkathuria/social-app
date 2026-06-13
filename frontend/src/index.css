@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root{
+    --bg: white;
+    --text: black;
+    --header: #8b8989;
+    --border: black;
+    --card: white;
+    --input: #123;
+    --submit: rgb(73, 73, 233);
+    --submit-hover: blue;
+    --link-hover: #aaa;
+    --new-user: blue;
+    --new-user-hover: rgb(3, 3, 155);
+}
+
+[data-theme="dark"]{
+    --bg: #111;
+    --text: #f5f5f5;
+    --header: #1a1a1a;
+    --border: #666;
+    --card: #222;
+    --input: #777;
+    --submit: #4c6fff;
+    --submit-hover: #2f52ff;
+    --link-hover: #888;
+    --new-user: #6ea8ff;
+    --new-user-hover: #9fc3ff;
+}
+
+*{
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+    justify-items: center;
+    justify-self: center;
+}
+
+body{
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+}
+
+header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 200px;
+    padding: 20px 80px;
+    background-color: var(--header);
+    color: var(--text);
+}
+
+.error{
+    color: red;
+}
+
+.flex{
+    display: flex;
+    align-items: center;
+}
+
+.links{
+    gap: 20px;
+}
+
+.links a:hover{
+    color: var(--link-hover);
+}
+
+.login{
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 50px 30px;
+    margin: 50px auto;
+    background: var(--card);
+    width: fit-content;
+}
+
+button:hover{
+    color: var(--link-hover);
+    cursor: pointer;
+}
+
+.submit{
+    background: var(--submit);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin: 25px auto;
+}
+
+.submit:hover{
+    background-color: var(--submit-hover);
+}
+
+.new-user{
+    text-decoration: underline;
+    color: var(--new-user);
+}
+
+.new-user:hover{
+    color: var(--new-user-hover);
+}
+
+input{
+    margin: 10px 5px 30px;
+    border: 2px solid var(--input);
+    padding: 2px 10px;
+    background: var(--card);
+    color: var(--text);
+}
+
+#visib{
+    margin-bottom: 20px;
+}
+
+.post{
+    border: 2px solid var(--border);
+    background: var(--card);
+    width: 500px;
+    padding: 30px;
+    margin: 10px auto;
+    border-radius: 15px;
+}
+
+.post div{
+    justify-self: left;
+}
+
+.image-placeholder{
+    border: 2px solid var(--border);
+    width: 440px;
+    height: 440px;
+    margin: 20px 0;
+    background: var(--bg);
+}

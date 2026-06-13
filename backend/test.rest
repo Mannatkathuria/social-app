@@ -1,0 +1,49 @@
+# POST http://localhost:8000/api/v1/users/register
+# Content-Type: multipart/form-data; boundary=MyBoundary
+
+# --MyBoundary
+# Content-Disposition: form-data; name="fullName"
+
+# Mannat Kathuria
+# --MyBoundary
+# Content-Disposition: form-data; name="email"
+
+# abc@gmail.com
+# --MyBoundary
+# Content-Disposition: form-data; name="username"
+
+# mannat23
+# --MyBoundary
+# Content-Disposition: form-data; name="password"
+
+# abc123
+# --MyBoundary
+# Content-Disposition: form-data; name="avatar"; filename="photo.png"
+# Content-Type: image/png
+
+# < ./public/photo.png
+# --MyBoundary
+# Content-Disposition: form-data; name="coverImage"; filename="photo.png"
+# Content-Type: image/png
+
+# < ./public/photo.png
+# --MyBoundary--k
+
+
+###
+POST http://localhost:8000/api/v1/users/register
+Content-Type: application/json
+
+{
+    "username": "mannat_kathuria",
+    "password": "mannat23"
+}
+
+###
+POST http://localhost:8000/api/v1/users/login
+Content-Type: application/json
+
+{
+    "username": "mannat_kathuria",
+    "password": "mannat23"
+}
