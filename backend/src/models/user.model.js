@@ -12,8 +12,29 @@ const userSchema = new Schema({
         index: true
     },
 
+    fullName: {
+        type: String,
+        trim: true,
+        default: ""
+    },
+
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: 150,
+        default: ""
+    },
+
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        default: ""
+    },
+
     pfp: {
         type: String, // cloudinary url
+        default: ""
     },
 
     posts:  [

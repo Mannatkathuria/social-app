@@ -9,6 +9,7 @@ import AllChats from './pages/AllChats';
 import NewPost from './pages/NewPost';
 import Post from './pages/Post';
 import Attachments from './pages/Attachments';
+import EditProfile from './pages/EditProfile';
 
 function App() {
 
@@ -18,20 +19,22 @@ function App() {
       <Navbar title={"Instagram"} />
 
         {/* Routes */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          {/* <Route path={user ? `/${user.username || user}` : "/"} element={<Profile />} /> */}
-          <Route path="/settings" element={<Settings />} />
-          <Route path='/chat' element={<AllChats />} />
-          <Route path='/addpost' element={<NewPost />} />
+        <div className="main-content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path='/chat' element={<AllChats />} />
+            <Route path='/addpost' element={<NewPost />} />
+            <Route path='/edit-profile' element={<EditProfile />} />
 
-          {/* keep these in last */}
-          <Route path='/chatbox/:username' element={<Chatbox />} />
-          <Route path='/post/:id' element={<Post />} />
-          <Route path='/:user/attachments' element={<Attachments />} />
-          <Route path="/:username" element={<Profile />} /> 
-        </Routes>
+            {/* keep these in last */}
+            <Route path='/chatbox/:username' element={<Chatbox />} />
+            <Route path='/post/:id' element={<Post />} />
+            <Route path='/:user/attachments' element={<Attachments />} />
+            <Route path="/:username" element={<Profile />} /> 
+          </Routes>
+        </div>
       </BrowserRouter>
 
     </>

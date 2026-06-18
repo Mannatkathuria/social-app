@@ -2,29 +2,33 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiErrors.js'
 import { User } from '../models/user.model.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
+import { uploadOnCloudinary } from '../utils/cloudinary.js'
 
-const registerUser = asyncHandler( async (req, res) => {
-    // get details from user
-    // validation - non-empty, already-exists etc
-    // check for images and avtar
-    // upload on cloudinary
-    // create user object
-    // create entry in db
-    // remove password and refresh token field from res
-    // check for user creation
-    // return res
+const generateAccessAndRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
 
-    const {username, password} = req.body
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-    if(
-        [password, username].some((field) => field?.trim() === "")
-    ) {
+        return { accessToken, refreshToken }
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating tokens")
+    }
+}
+
+const registerUser = asyncHandler(async (req, res) => {
+    const { username, password } = req.body
+
+    if ([password, username].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = await User.findOne({username})
+    const existedUser = await User.findOne({ username })
 
-    if(existedUser){
+    if (existedUser) {
         throw new ApiError(409, "User already exists")
     }
 
@@ -33,42 +37,79 @@ const registerUser = asyncHandler( async (req, res) => {
         username
     })
 
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
-    const createdUser = await User.findById(user._id).select( "-password -refreshToken" )
-
-    if(!createdUser){
+    if (!createdUser) {
         throw new ApiError(500, "couldn't register user")
     }
 
-    return res.status(201).json(new ApiResponse(200, createdUser, "user registered successfully"))
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    }
+
+    return res
+        .status(201)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(200, {
+            user: createdUser,
+            accessToken,
+            refreshToken
+        }, "user registered successfully"))
 })
 
 const loginUser = asyncHandler(async (req, res) => {
-    const {username, password} = req.body
+    const { username, password } = req.body
 
-    const user = await User.findOne({username})
+    const user = await User.findOne({ username })
 
-    if(!user) throw new ApiError(404, "User doesn't exist")
+    if (!user) throw new ApiError(404, "User doesn't exist")
     
     const validPassword = await user.isPasswordCorrect(password)
 
-    if(!validPassword) throw new ApiError(401, "Invalid Credentials")
-    return res.status(200).json(new ApiResponse(200, user, "logged in"))
+    if (!validPassword) throw new ApiError(401, "Invalid Credentials")
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    }
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(200, {
+            user: loggedInUser,
+            accessToken,
+            refreshToken
+        }, "logged in"))
 })
 
 const getUserProfile = asyncHandler(async (req, res) => {
-    const {username} = req.params
+    const { username } = req.params
 
-    const user = await User.findOne({username}).select("-password -refreshToken")
-    if(!user) throw new ApiError(404, "User doesn't exist")
+    const user = await User.findOne({ username })
+        .select("-password -refreshToken")
+        .populate("followers", "username pfp")
+        .populate("following", "username pfp")
+
+    if (!user) throw new ApiError(404, "User doesn't exist")
 
     return res.status(200).json(new ApiResponse(203, user, "found"))
 })
 
 const toggleFollowUser = asyncHandler(async (req, res) => {
     const { username } = req.params; 
-    const {currentUsername} = req.body; 
+    const { currentUsername } = req.body; 
 
     if (!currentUsername) {
         throw new ApiError(401, "Unauthorized: Please log in to follow users");
@@ -101,8 +142,8 @@ const getAttachments = asyncHandler(async (req, res) => {
     const { user } = req.query;
 
     const userDoc = await User.findOne({ username: user })
-        .populate("followers", "username")
-        .populate("following", "username");
+        .populate("followers", "username pfp")
+        .populate("following", "username pfp");
 
     if (!userDoc) {
         throw new ApiError(404, "User not found");
@@ -116,4 +157,52 @@ const getAttachments = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, getUserProfile, toggleFollowUser, getAttachments }
+const updateProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+    const { fullName, bio, email } = req.body;
+
+    const updateData = {};
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (bio !== undefined) updateData.bio = bio;
+    if (email !== undefined) updateData.email = email;
+
+    // Handle profile picture upload
+    if (req.file) {
+        const cloudFile = await uploadOnCloudinary(req.file.path);
+        if (cloudFile) {
+            updateData.pfp = cloudFile.secure_url;
+        }
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+        { username },
+        { $set: updateData },
+        { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    if (!updatedUser) {
+        throw new ApiError(404, "User not found");
+    }
+
+    res.status(200).json(
+        new ApiResponse(200, updatedUser, "Profile updated successfully")
+    );
+});
+
+const searchUsers = asyncHandler(async (req, res) => {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+        return res.status(200).json(new ApiResponse(200, [], "No search query"));
+    }
+
+    const users = await User.find({
+        username: { $regex: q, $options: "i" }
+    })
+        .select("username pfp fullName")
+        .limit(20);
+
+    res.status(200).json(new ApiResponse(200, users, "Users found"));
+});
+
+export { registerUser, loginUser, getUserProfile, toggleFollowUser, getAttachments, updateProfile, searchUsers }

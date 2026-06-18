@@ -136,10 +136,14 @@ const commentPosts = asyncHandler(async (req, res) => {
 
     await post.save();
 
+    // Populate the user field for the new comment
+    const updatedPost = await Post.findById(post_id)
+        .populate("comments.user", "username");
+
     res.status(200).json(
         new ApiResponse(
             200,
-            post.comments,
+            updatedPost.comments,
             "Comment added"
         )
     );
@@ -164,7 +168,7 @@ const getFeed = asyncHandler(async (req, res) => {
             ]
         }
     })
-        .populate("owner", "username")
+        .populate("owner", "username pfp")
         .sort({ createdAt: -1 });
 
     res.status(200).json(
@@ -172,4 +176,34 @@ const getFeed = asyncHandler(async (req, res) => {
     );
 });
 
-export { addPost, getPosts, getOnePost, likePost, commentPosts, getFeed }
+const deletePost = asyncHandler(async (req, res) => {
+    const { post_id, username } = req.body;
+
+    const post = await Post.findById(post_id);
+    if (!post) {
+        throw new ApiError(404, "Post not found");
+    }
+
+    const owner = await User.findOne({ username });
+    if (!owner) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Check if the user is the owner
+    if (post.owner.toString() !== owner._id.toString()) {
+        throw new ApiError(403, "You can only delete your own posts");
+    }
+
+    // Remove post reference from user
+    owner.posts.pull(post._id);
+    await owner.save();
+
+    // Delete the post
+    await Post.findByIdAndDelete(post_id);
+
+    res.status(200).json(
+        new ApiResponse(200, null, "Post deleted successfully")
+    );
+});
+
+export { addPost, getPosts, getOnePost, likePost, commentPosts, getFeed, deletePost }

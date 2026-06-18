@@ -1,13 +1,11 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import api from '../api/axios.js'
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
 
 function Login() {
     const navigate = useNavigate();
-    const { setLogged, setUser } = useContext(AuthContext);
-    const {logged, user} = useContext(AuthContext);
+    const { login, logged } = useContext(AuthContext);
 
     const [passType, setPassType] = useState("password");
     const [username, setUserName] = useState('');
@@ -15,106 +13,102 @@ function Login() {
     const [newUser, setNewUser] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
-    useEffect(() => {
-        localStorage.setItem('logged', logged)
-    }, [logged])
-
-    useEffect(() => {
-        localStorage.setItem('user', user)
-    }, [user])
-
     async function submit() {
         setErrorMsg("");
 
-        if(newUser){
-            try{
-                const user = await api.post("/users/register", {
-                    username,
-                    password
-                })
-
-                setLogged(true);
-                setUser(username);
-
-                navigate('/')
-
-            } catch(err) {
-                console.log(err);
+        if (newUser) {
+            try {
+                const res = await api.post("/users/register", { username, password });
+                const token = res.data.data.accessToken;
+                login(username, token);
+                navigate('/');
+            } catch (err) {
                 const backendError = err.response?.data?.message || err.message || "Registration failed";
                 setErrorMsg(backendError);
             }
-
             return;
         }
 
         try {
-            const user = await api.post("/users/login", {
-                username,
-                password
-            })
-
-            setLogged(true);
-            setUser(username);
-
-            navigate('/')
-
-        } catch(err) {
-            console.log(err);
+            const res = await api.post("/users/login", { username, password });
+            const token = res.data.data.accessToken;
+            login(username, token);
+            navigate('/');
+        } catch (err) {
             const backendError = err.response?.data?.message || err.message || "Login failed";
             setErrorMsg(backendError);
         }
     }
 
     return (
-        <>
+        <div className="auth-page">
+            <div className="auth-container">
+                <div className="auth-box">
+                    <h1>📷</h1>
+                    <p className="subtitle">
+                        {newUser
+                            ? "Sign up to see photos from your friends."
+                            : "Sign in to see photos from your friends."}
+                    </p>
 
-            <div className="login">
-                <div>Enter Username</div>
+                    {errorMsg && <div className="auth-error">{errorMsg}</div>}
 
-                <input
-                    type="text"
-                    placeholder="username"
-                    value={username}
-                    onChange={(e) => setUserName(e.target.value)}
-                />
+                    <form onSubmit={(e) => { e.preventDefault(); submit(); }}>
+                        <input
+                            type="text"
+                            placeholder="Username"
+                            value={username}
+                            onChange={(e) => setUserName(e.target.value.toLowerCase())}
+                            required
+                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={passType}
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{ width: '100%', paddingRight: 40 }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setPassType(prev => prev === "password" ? "text" : "password")}
+                                style={{
+                                    position: 'absolute',
+                                    right: 8,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: 'var(--text-secondary)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    padding: 4
+                                }}
+                            >
+                                {passType === "password" ? "Show" : "Hide"}
+                            </button>
+                        </div>
+                        <button type="submit" className="ig-btn ig-btn-primary ig-btn-full">
+                            {newUser ? "Sign Up" : "Log In"}
+                        </button>
+                    </form>
 
-                <div>Enter Password</div>
+                    <div className="auth-divider">
+                        <span>OR</span>
+                    </div>
 
-                <div className="flex">
-                    <input
-                        type={passType}
-                        placeholder="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-
-                    <button
-                        onClick={() =>
-                            setPassType(prev =>
-                                prev === "password" ? "text" : "password"
-                            )
-                        } id="visib"
-                    >
-                        {passType === "password" ? 'o' : '#'}
-                    </button>
+                    <div className="auth-toggle">
+                        {newUser ? (
+                            <>Have an account? <a onClick={() => setNewUser(false)}>Log in</a></>
+                        ) : (
+                            <>Don't have an account? <a onClick={() => setNewUser(true)}>Sign up</a></>
+                        )}
+                    </div>
                 </div>
-
-                <button className="submit" onClick={submit}>
-                    Submit
-                </button>
-
-                <br />
-
-                <button
-                    className="new-user"
-                    onClick={() => setNewUser(prev => !prev)}
-                >
-                    {newUser ? "Log-in" : "Sign-up"}
-                </button>
-
-                <p className="error">{errorMsg}</p>
             </div>
-        </>
+        </div>
     );
 }
 
