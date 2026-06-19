@@ -1,24 +1,18 @@
-import serverless from 'serverless-http';
-import app from '../src/app.js';
-
-// Connect to MongoDB on cold start
-import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-
-import connectDB from '../src/db/index.js';
-
-let isConnected = false;
-
 async function handler(event, context) {
-  if (!isConnected) {
-    try {
-      await connectDB();
-      isConnected = true;
-    } catch (err) {
-      console.error('MongoDB connection error:', err);
-    }
-  }
-  return serverless(app)(event, context);
-}
+    console.log("Function invoked");
 
-export default handler;
+    if (!isConnected) {
+        console.log("Connecting DB...");
+
+        try {
+            await connectDB();
+            isConnected = true;
+            console.log("DB connected");
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    console.log("Returning serverless app");
+    return serverless(app)(event, context);
+}
