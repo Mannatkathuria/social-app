@@ -166,12 +166,9 @@ const updateProfile = asyncHandler(async (req, res) => {
     if (bio !== undefined) updateData.bio = bio;
     if (email !== undefined) updateData.email = email;
 
-    // Handle profile picture upload
+    // Handle profile picture upload (CloudinaryStorage returns URL in req.file.path)
     if (req.file) {
-        const cloudFile = await uploadOnCloudinary(req.file.path);
-        if (cloudFile) {
-            updateData.pfp = cloudFile.secure_url;
-        }
+        updateData.pfp = req.file.path;
     }
 
     const updatedUser = await User.findOneAndUpdate(

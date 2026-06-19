@@ -3,7 +3,7 @@ import { loginUser, registerUser, getUserProfile, toggleFollowUser, getAttachmen
 import { verifyJWT } from "../middlewares/verifyJWT.middleware.js";
 import { getChats, getMessages, sendMessage } from "../controllers/message.controller.js";
 import { addPost, commentPosts, deletePost, getFeed, getOnePost, getPosts, likePost } from "../controllers/post.controller.js";
-import { upload } from "../middlewares/multer.middleware.js";
+import { upload } from "../utils/multer-cloudinary.js";
 
 const router = Router()
 

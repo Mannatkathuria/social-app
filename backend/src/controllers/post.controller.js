@@ -1,9 +1,7 @@
-import { upload } from "../middlewares/multer.middleware.js";
 import { Post } from "../models/post.model.js";
 import { ApiError } from "../utils/ApiErrors.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 
 
@@ -15,9 +13,7 @@ const addPost = asyncHandler(async (req, res) => {
         throw new ApiError(400, "File not uploaded");
     }
 
-    const cloudFile = await uploadOnCloudinary(
-        req.file.path
-    );
+    const fileUrl = req.file.path;
 
     const owner = await User.findOne({
         username: user
@@ -26,7 +22,7 @@ const addPost = asyncHandler(async (req, res) => {
 
     const post = await Post.create({
         owner: owner._id,
-        file: cloudFile.secure_url,
+        file: fileUrl,
         description
     });
 
