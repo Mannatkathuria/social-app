@@ -5,10 +5,16 @@ import cookieParser from 'cookie-parser'
 const app = express()
 
 app.use(cors({
-    origin: process.env.CORS_OG || ['http://localhost:5173', 'http://localhost:4173'],
-    credentials: true
-}))
+    origin: [
+        "http://localhost:5173",
+        "https://social-frontend-ctxnndvx5-mannatkathuria23-2294s-projects.vercel.app"
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
+app.options("*", cors());
 app.use(express.json({
     limit: "16kb"
 }))

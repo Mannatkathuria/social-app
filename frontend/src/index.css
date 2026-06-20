@@ -280,7 +280,25 @@ input, textarea, select {
 }
 
 @media (max-width: 735px) {
-    .nav-search { display: none; }
+    .nav-search {
+        display: block;
+        width: auto;
+        flex: 1;
+        max-width: 200px;
+        margin: 0 8px;
+    }
+
+    .nav-search input {
+        padding: 7px 12px;
+        padding-left: 32px;
+        font-size: 13px;
+    }
+
+    .nav-search-icon {
+        left: 10px;
+        font-size: 11px;
+    }
+
     .bottom-nav { display: flex; }
 }
 

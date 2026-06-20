@@ -10,6 +10,7 @@ function Navbar({ title }){
     const [searchResults, setSearchResults] = useState([]);
     const [showSearch, setShowSearch] = useState(false);
     const searchRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -20,6 +21,10 @@ function Navbar({ title }){
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const focusSearch = () => {
+        searchInputRef.current?.focus();
+    };
 
     const handleSearch = async (q) => {
         setSearchQuery(q);
@@ -54,6 +59,7 @@ function Navbar({ title }){
                     <div className="nav-search" ref={searchRef}>
                         <span className="nav-search-icon">🔍</span>
                         <input
+                            ref={searchInputRef}
                             type="text"
                             placeholder="Search"
                             value={searchQuery}
@@ -130,6 +136,7 @@ function Navbar({ title }){
             {/* Bottom Nav (Mobile) */}
             <div className="bottom-nav">
                 <span className="bottom-nav-btn" onClick={() => navigate('/')}>🏠</span>
+                <span className="bottom-nav-btn" onClick={focusSearch}>🔍</span>
                 {logged ? (
                     <>
                         <span className="bottom-nav-btn" onClick={() => navigate('/chat')}>💬</span>
